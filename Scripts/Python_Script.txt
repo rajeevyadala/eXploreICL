@@ -1,0 +1,88 @@
+import openai
+import pandas as pd
+import anthropic
+
+def getChatgptdata(prompt):
+    
+    try:
+        # Set your OpenAI API key
+        openai.api_key = "gpt-token"  # Replace with your actual key
+        
+        # Define the prompt
+        # prompt = "fruits"
+        
+        # Send the request to ChatGPT (GPT-4 or GPT-3.5-turbo)
+        response = openai.ChatCompletion.create(
+            model="gpt-4o",  # You can also use "gpt-3.5-turbo" if you don't have GPT-4 access
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7  # Controls randomness; lower is more deterministic
+        )
+        
+        # Extract and print the response
+        # print("ChatGPT Response:\n")
+        # print(response['choices'][0]['message']['content'])
+        return response['choices'][0]['message']['content']
+
+    except Exception as e:
+        return "not able to find data"
+
+def getClaudedata(promoptc):
+    try:
+        client = anthropic.Anthropic(
+            # defaults to os.environ.get("ANTHROPIC_API_KEY")
+            api_key="anthropic-token",
+        )
+        
+        message = client.messages.create(
+            model="claude-3-5-haiku-20241022",
+            max_tokens=1024,
+            messages=[
+                {"role": "user", "content": "Hello, Claude"},
+                {"role": "user", "content": promoptc}
+            ]
+        )
+#        print(message.content)
+        if hasattr(message, "content"):
+            # Join text from each text block (if available)
+            #print(" ".join(block.text for block in message.content if hasattr(block, "text")))
+            message_c = " ".join(block.text for block in message.content if hasattr(block, "text"))
+            print(message_c)
+        else:
+            message_c = ""
+        return message_c
+
+    except Exception as e:
+        return "not able to find data" + str(e)
+
+data=pd.read_excel("Test1.xlsx")
+
+response=[]
+
+for _,kw in data.iterrows():
+    
+    prompt= kw['Context'] + kw['Request']
+    
+    result=getChatgptdata(prompt)
+    response.append(result)
+
+data['Response']=response
+
+data.to_excel('Test1.xlsx',index=False)
+
+data=pd.read_excel("Test1.xlsx")
+
+message_c=[]
+
+for _,kz in data.iterrows():
+    promptc=kw['Context'] + kz['Request']
+    result=getClaudedata(promptc)
+    message_c.append(result)
+
+data['ResponseC']=message_c
+
+data
+
+data.to_excel('Test1.xlsx',index=False)
