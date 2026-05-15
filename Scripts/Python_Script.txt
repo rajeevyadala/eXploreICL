@@ -1,43 +1,36 @@
-import openai
+import openai 
 import pandas as pd
 import anthropic
 
-def getChatgptdata(prompt):
-    
+from openai import OpenAI
+
+client = OpenAI(api_key= "KEY")
+
+def getChatgptdata(prompt):    
     try:
-        # Set your OpenAI API key
-        openai.api_key = "gpt-token"  # Replace with your actual key
-        
-        # Define the prompt
-        # prompt = "fruits"
-        
-        # Send the request to ChatGPT (GPT-4 or GPT-3.5-turbo)
-        response = openai.ChatCompletion.create(
-            model="gpt-4o",  # You can also use "gpt-3.5-turbo" if you don't have GPT-4 access
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7  # Controls randomness; lower is more deterministic
+        completion = client.chat.completions.create(
+           model="gpt-5.4",  # You can also use "gpt-3.5-turbo" if you don't have GPT-4 access
+           messages=[
+               {"role": "system", "content": "You are a helpful assistant."},
+               {"role": "user", "content": prompt}
+           ],
+        #   temperature=0.1  # Controls randomness; lower is more deterministic
         )
-        
-        # Extract and print the response
-        # print("ChatGPT Response:\n")
-        # print(response['choices'][0]['message']['content'])
-        return response['choices'][0]['message']['content']
+        return completion.choices[0].message.content
+        print(message)
 
     except Exception as e:
-        return "not able to find data"
+        return f"ERROR: {e}"
 
 def getClaudedata(promoptc):
     try:
         client = anthropic.Anthropic(
             # defaults to os.environ.get("ANTHROPIC_API_KEY")
-            api_key="anthropic-token",
+            api_key="KEY",
         )
         
         message = client.messages.create(
-            model="claude-3-5-haiku-20241022",
+            model="claude-sonnet-4-5-20250929",
             max_tokens=1024,
             messages=[
                 {"role": "user", "content": "Hello, Claude"},
@@ -56,9 +49,8 @@ def getClaudedata(promoptc):
 
     except Exception as e:
         return "not able to find data" + str(e)
-
-data=pd.read_excel("Test1.xlsx")
-
+		
+data=pd.read_excel("Prompts.xlsx")
 response=[]
 
 for _,kw in data.iterrows():
@@ -67,22 +59,17 @@ for _,kw in data.iterrows():
     
     result=getChatgptdata(prompt)
     response.append(result)
-
+	
 data['Response']=response
+data.to_excel('Prompts.xlsx',index=False)
 
-data.to_excel('Test1.xlsx',index=False)
-
-data=pd.read_excel("Test1.xlsx")
-
+data=pd.read_excel("Prompts.xlsx")
 message_c=[]
-
 for _,kz in data.iterrows():
-    promptc=kw['Context'] + kz['Request']
+    promptc=kz['Context'] + kz['Request']
     result=getClaudedata(promptc)
     message_c.append(result)
 
 data['ResponseC']=message_c
-
 data
-
-data.to_excel('Test1.xlsx',index=False)
+data.to_excel('Prompts.xlsx',index=False)
